@@ -1,2 +1,2 @@
-# TF2-AntiStuck-TF2SB-
+# TF2SB-AntiStuck
 Antistuck System for TF2SB
