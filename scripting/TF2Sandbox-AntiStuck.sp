@@ -15,7 +15,7 @@
 
 public Plugin myinfo = 
 {
-	name = "[TF2] AntiStuck System for TF2SB",
+	name = "[TF2] SandBox - AntiStuck",
 	author = PLUGIN_AUTHOR,
 	description = "Antistuck System for TF2SB",
 	version = PLUGIN_VERSION,
@@ -27,6 +27,7 @@ Handle g_hAutoUnstuck;
 
 public void OnPluginStart()
 {
+	CreateConVar("sm_tf2sb_antistuck_version", PLUGIN_VERSION, "", FCVAR_SPONLY|FCVAR_NOTIFY);
 	g_hEnabled = CreateConVar("sm_tf2sb_antistuck", "1", "Enable the AntiStuck System?", 0, true, 0.0, true, 1.0);
 	g_hAutoUnstuck = CreateConVar("sm_tf2sb_unstuckmode", "2", "Mode 0 = Disable auto, Mode 1 = Smooth unstuck, Mode 2 = Instant unstuck", 0, true, 0.0, true, 2.0);
 }
