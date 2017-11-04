@@ -37,39 +37,40 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 {	
 	if(GetConVarBool(g_hEnabled))
 	{
-		if(Build_IsClientValid(client, client, true) && GetConVarInt(g_hAutoUnstuck) == 1)
-		{
-			if(buttons & IN_ATTACK)
-				g_bIN_ATTACK[client] = true;
-			else
-				g_bIN_ATTACK[client] = false;
-		}
+		if(buttons & IN_ATTACK)
+			g_bIN_ATTACK[client] = true;
+		else
+			g_bIN_ATTACK[client] = false;
 		
-		for(int ent = 0; ent < MAX_HOOK_ENTITIES; ent++)  if(IsValidEntity(ent))
+		for(int ent = 0; ent < MAX_HOOK_ENTITIES; ent++)  
 		{
-			int EntityOwner = Build_ReturnEntityOwner(ent);
-			if(Build_IsClientValid(EntityOwner, EntityOwner))
-			{		
-				bool bIsEntityStuck = false;				
-				for(int i = 1; i < MAXPLAYERS; i++)	if(Build_IsClientValid(i, i, true))
-				{
-					if(IsPlayerStuckInEnt(i, ent) && GetEntityMoveType(i) != MOVETYPE_NOCLIP)
+			if(IsValidEntity(ent))
+			{
+				int EntityOwner = Build_ReturnEntityOwner(ent);
+				if(IsValidClient(EntityOwner))
+				{		
+					bool bIsEntityStuck = false;				
+					for(int i = 1; i < MAXPLAYERS; i++)	
 					{
-						if(GetConVarInt(g_hAutoUnstuck) == 1 && !g_bIN_ATTACK[EntityOwner])
+						if(IsValidClient(i) && IsPlayerAlive(i))
 						{
-							float iPosition[3];
-							GetClientEyePosition(i, iPosition);
-							iPosition[0] += 0.1;
-							TeleportEntity(i, iPosition, NULL_VECTOR, NULL_VECTOR);
+							if(IsPlayerStuckInEnt(i, ent) && GetEntityMoveType(i) != MOVETYPE_NOCLIP)
+							{
+								if(GetConVarInt(g_hAutoUnstuck) == 1 && !g_bIN_ATTACK[EntityOwner])
+								{
+									float iPosition[3];
+									GetClientEyePosition(i, iPosition);
+									iPosition[0] += 0.1;
+									TeleportEntity(i, iPosition, NULL_VECTOR, NULL_VECTOR);
+								}
+								AcceptEntityInput(ent, "DisableCollision");
+								bIsEntityStuck = true;
+							}
 						}
-						bIsEntityStuck = true;
-						break;
+						if(!bIsEntityStuck)
+							AcceptEntityInput(ent, "EnableCollision");
 					}
 				}
-				if(bIsEntityStuck)
-					AcceptEntityInput(ent, "DisableCollision");
-				else
-					AcceptEntityInput(ent, "EnableCollision");
 			}
 		}
 	}
@@ -92,4 +93,12 @@ stock bool IsPlayerStuckInEnt(int client, int ent)
 public bool TraceRayHitOnlyEnt(int entity, int contentsMask, any data) 
 {
 	return entity==data;
+}
+
+stock bool IsValidClient(int client) 
+{ 
+    if(client <= 0 ) return false; 
+    if(client > MaxClients) return false; 
+    if(!IsClientConnected(client)) return false; 
+    return IsClientInGame(client); 
 }
