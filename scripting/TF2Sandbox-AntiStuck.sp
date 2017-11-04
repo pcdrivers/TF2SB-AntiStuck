@@ -3,7 +3,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "Battlefield Duck"
-#define PLUGIN_VERSION "1.3"
+#define PLUGIN_VERSION "1.5"
 
 #include <sourcemod>
 #include <sdktools>
@@ -35,46 +35,53 @@ public void OnPluginStart()
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
 {	
-	if(GetConVarBool(g_hEnabled))
+	if(!IsValidClient(client))
+		return Plugin_Continue;
+		
+	if(GetConVarInt(g_hAutoUnstuck) == 1)
 	{
 		if(buttons & IN_ATTACK)
 			g_bIN_ATTACK[client] = true;
 		else
 			g_bIN_ATTACK[client] = false;
-		
-		for(int ent = 0; ent < MAX_HOOK_ENTITIES; ent++)  
+	}
+	
+	if(GetConVarBool(g_hEnabled))
+	{
+		for(int ent = 0; ent < MAX_HOOK_ENTITIES; ent++)
 		{
-			if(IsValidEntity(ent))
+			if(IsValidEntity(ent) && !IsValidClient(ent))
 			{
-				int EntityOwner = Build_ReturnEntityOwner(ent);
+				int EntityOwner = -1;
+				EntityOwner = Build_ReturnEntityOwner(ent);
+				
 				if(IsValidClient(EntityOwner))
-				{		
-					bool bIsEntityStuck = false;				
-					for(int i = 1; i < MAXPLAYERS; i++)	
+				{
+					if(IsValidClient(client) && IsPlayerAlive(client) && IsPlayerStuckInEnt(client, ent) && GetEntityMoveType(client) != MOVETYPE_NOCLIP)
 					{
-						if(IsValidClient(i) && IsPlayerAlive(i))
-						{
-							if(IsPlayerStuckInEnt(i, ent) && GetEntityMoveType(i) != MOVETYPE_NOCLIP)
+						if(!g_bIN_ATTACK[EntityOwner])
+							if(GetConVarInt(g_hAutoUnstuck) == 1)
 							{
-								if(GetConVarInt(g_hAutoUnstuck) == 1 && !g_bIN_ATTACK[EntityOwner])
-								{
-									float iPosition[3];
-									GetClientEyePosition(i, iPosition);
-									iPosition[0] += 0.1;
-									TeleportEntity(i, iPosition, NULL_VECTOR, NULL_VECTOR);
-								}
-								AcceptEntityInput(ent, "DisableCollision");
-								bIsEntityStuck = true;
+								float iPosition[3]; 
+								GetClientEyePosition(client, iPosition);
+								
+								iPosition[0] += 0.1;
+								
+								TeleportEntity(client, iPosition, NULL_VECTOR, NULL_VECTOR);
 							}
-						}
-						if(!bIsEntityStuck)
-							AcceptEntityInput(ent, "EnableCollision");
+							
+						AcceptEntityInput(ent, "DisableCollision");
+					}
+					else if(!IsPlayerStuckInEnt(client, ent))
+					{	
+						AcceptEntityInput(ent, "EnableCollision");
 					}
 				}
 			}
 		}
 	}
-}
+	return Plugin_Continue;
+}	
 
 //-------------[	Stock	]---------------------------------------------------
 stock bool IsPlayerStuckInEnt(int client, int ent)
