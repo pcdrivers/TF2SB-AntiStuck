@@ -3,10 +3,8 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "Battlefield Duck"
-#define PLUGIN_VERSION "1.1"
+#define PLUGIN_VERSION "1.3"
 
-
-#include <clientprefs>
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -37,20 +35,17 @@ public void OnPluginStart()
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
 {	
-	if(Build_IsClientValid(client, client, true) && GetConVarInt(g_hAutoUnstuck) == 1)
-	{
-		if(buttons & IN_ATTACK)
-			g_bIN_ATTACK[client] = true;
-		else
-			g_bIN_ATTACK[client] = false;
-	}
-}
-
-public void OnGameFrame()
-{
 	if(GetConVarBool(g_hEnabled))
 	{
-		for(int ent = 0; ent < MAX_HOOK_ENTITIES; ent++)  if(IsValidEntity(ent) && !Build_IsClientValid(ent, ent))
+		if(Build_IsClientValid(client, client, true) && GetConVarInt(g_hAutoUnstuck) == 1)
+		{
+			if(buttons & IN_ATTACK)
+				g_bIN_ATTACK[client] = true;
+			else
+				g_bIN_ATTACK[client] = false;
+		}
+		
+		for(int ent = 0; ent < MAX_HOOK_ENTITIES; ent++)  if(IsValidEntity(ent))
 		{
 			int EntityOwner = Build_ReturnEntityOwner(ent);
 			if(Build_IsClientValid(EntityOwner, EntityOwner))
@@ -79,7 +74,6 @@ public void OnGameFrame()
 		}
 	}
 }
-
 
 //-------------[	Stock	]---------------------------------------------------
 stock bool IsPlayerStuckInEnt(int client, int ent)
