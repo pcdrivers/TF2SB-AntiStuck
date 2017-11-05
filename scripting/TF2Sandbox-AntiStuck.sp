@@ -65,7 +65,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 								float iPosition[3]; 
 								GetClientEyePosition(client, iPosition);
 								
-								iPosition[0] += 0.1;
+								iPosition[0] += 0.001;
 								
 								TeleportEntity(client, iPosition, NULL_VECTOR, NULL_VECTOR);
 							}
