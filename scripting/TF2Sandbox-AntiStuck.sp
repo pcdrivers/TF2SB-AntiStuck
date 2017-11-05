@@ -3,7 +3,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "Battlefield Duck"
-#define PLUGIN_VERSION "1.5"
+#define PLUGIN_VERSION "2.0"
 
 #include <sourcemod>
 #include <sdktools>
@@ -50,31 +50,34 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	{
 		for(int ent = 0; ent < MAX_HOOK_ENTITIES; ent++)
 		{
-			if(IsValidEntity(ent) && !IsValidClient(ent))
+			if(IsValidEdict(ent) && !IsValidClient(ent))
 			{
 				int EntityOwner = -1;
 				EntityOwner = Build_ReturnEntityOwner(ent);
-				
 				if(IsValidClient(EntityOwner))
 				{
-					if(IsValidClient(client) && IsPlayerAlive(client) && IsPlayerStuckInEnt(client, ent) && GetEntityMoveType(client) != MOVETYPE_NOCLIP)
+					char szClass[128];
+					GetEdictClassname(ent, szClass, sizeof(szClass));
+					if((StrContains(szClass, "prop_dynamic") >= 0 || StrContains(szClass, "prop_physics") >= 0) && !StrEqual(szClass, "prop_ragdoll"))
 					{
-						if(!g_bIN_ATTACK[EntityOwner])
-							if(GetConVarInt(g_hAutoUnstuck) == 1)
+						if(IsValidClient(client) && IsPlayerAlive(client) && IsPlayerStuckInEnt(client, ent) && GetEntityMoveType(client) != MOVETYPE_NOCLIP)
+						{
+							if(!g_bIN_ATTACK[EntityOwner])
 							{
-								float iPosition[3]; 
-								GetClientEyePosition(client, iPosition);
-								
-								iPosition[0] += 0.001;
-								
-								TeleportEntity(client, iPosition, NULL_VECTOR, NULL_VECTOR);
+								if(GetConVarInt(g_hAutoUnstuck) == 1)
+								{
+									float iPosition[3]; 
+									GetClientEyePosition(client, iPosition);
+									iPosition[0] += 0.001;
+									TeleportEntity(client, iPosition, NULL_VECTOR, NULL_VECTOR);
+								}
 							}
-							
-						AcceptEntityInput(ent, "DisableCollision");
-					}
-					else if(!IsPlayerStuckInEnt(client, ent))
-					{	
-						AcceptEntityInput(ent, "EnableCollision");
+							AcceptEntityInput(ent, "DisableCollision");
+						}
+						else if(!IsPlayerStuckInEnt(client, ent))
+						{	
+							AcceptEntityInput(ent, "EnableCollision");
+						}
 					}
 				}
 			}
