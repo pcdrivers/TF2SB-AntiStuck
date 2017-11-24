@@ -23,12 +23,12 @@ public Plugin myinfo =
 };
 
 Handle g_hEnabled;
-
+int g_CollisionOffset;
 public void OnPluginStart()
 {
 	CreateConVar("sm_tf2sb_antistuck_ver", PLUGIN_VERSION, "", FCVAR_SPONLY|FCVAR_NOTIFY);
 	g_hEnabled = CreateConVar("sm_tf2sb_antistuck", "1", "Enable the AntiStuck System?", 0, true, 0.0, true, 1.0);
-	
+	g_CollisionOffset = FindSendPropInfo("CBaseEntity", "m_CollisionGroup");
 }
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon)
@@ -36,26 +36,20 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 	if(GetConVarBool(g_hEnabled))
 	{
 		char szClass[64];
-		for(int ent = 0; ent < MAX_HOOK_ENTITIES; ent++)
+		for(int ent = MaxClients; ent < MAX_HOOK_ENTITIES; ent++)	if(IsValidEdict(ent) && !IsValidClient(ent))
 		{
-			if(IsValidEdict(ent) && !IsValidClient(ent))
+			if(IsValidClient(client) && IsPlayerAlive(client) && GetEntityMoveType(client) != MOVETYPE_NOCLIP && IsPlayerStuckInEnt(client, ent) && Build_ReturnEntityOwner(ent) != -1 && !(buttons & IN_ATTACK))
 			{
-				if(IsValidClient(client) && IsPlayerAlive(client) && GetEntityMoveType(client) != MOVETYPE_NOCLIP && IsPlayerStuckInEnt(client, ent) && Build_ReturnEntityOwner(ent) != -1 && !(buttons & IN_ATTACK))
-				{
-					GetEdictClassname(ent, szClass, sizeof(szClass));
-					//if (!(StrContains(szClass, "prop_physics") >= 0) && Build_ReturnEntityOwner(ent) == client) 
-					{	
-						float iPosition[3];
-						GetClientEyePosition(client, iPosition);
-						iPosition[0] += 0.1;
-						TeleportEntity(client, iPosition, NULL_VECTOR, NULL_VECTOR);
-					}
-						//PropDisableCollision(ent);
+				//GetEdictClassname(ent, szClass, sizeof(szClass));
+				//if (!(StrContains(szClass, "prop_physics") >= 0) && Build_ReturnEntityOwner(ent) == client) 
+				if(GetEntData(ent, g_CollisionOffset, 4) != 2)
+				{	
+					float iPosition[3];
+					GetClientEyePosition(client, iPosition);
+					iPosition[0] += 0.1;
+					TeleportEntity(client, iPosition, NULL_VECTOR, NULL_VECTOR);
 				}
-				//else
-				//{	
-					//PropEnableCollision(ent);
-				//}
+ 
 			}
 		}
 	}
